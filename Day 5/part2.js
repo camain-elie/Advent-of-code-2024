@@ -2,21 +2,35 @@ const fs = require('fs')
 
 const input = fs.readFileSync('./input', 'utf-8')
 
-const lineArray = input.split('\r\n')
-const letterArray = lineArray.map(item => item.split(''))
+const rulesInput = input.match(/[0-9]+\|[0-9]+/g)
+const pagesInput = input.match(/([0-9])+,([0-9][0-9],)*([0-9])+/g)
 
-function checkXMAS (array, x, y) {
-  return (array[x-1] && array[x+1] && 
-    (array[x-1][y-1] === "M" && array[x+1][y+1] === "S" || array[x-1][y-1] === "S" && array[x+1][y+1] === "M") &&
-    (array[x-1][y+1] === "M" && array[x+1][y-1] === "S" || array[x-1][y+1] === "S" && array[x+1][y-1] === "M"))
-}
-
-let XMASNumber = 0
-
-letterArray.forEach((line, xIndex, letterArray) => {
-  line.forEach((value, yIndex, line) => {
-    if (value === 'A' && checkXMAS(letterArray, xIndex, yIndex)) XMASNumber++
-  })
+const rules = {}
+rulesInput.forEach(item => {
+    const [pre, post] = item.split('|')
+    rules[pre] = [...(rules[pre] ?? []), post]
 })
 
-console.log(XMASNumber)
+const pages = pagesInput.map(item => item.split(','))
+
+function checkUpdate(update) {
+    let middleNumber = 0, isValid = true
+
+    update.forEach((pageNumber, index, update) => {
+        if (index === update.length - 1 && isValid) middleNumber = update[(update.length-1)/2]
+        
+        for(let i = index; i<update.length-1; i++) {
+            let rule = rules[update[i]]
+            if (rule && rule.indexOf(pageNumber) !== -1) isValid = false
+        }
+    })
+    return middleNumber
+}
+
+let result = 0
+
+pages.forEach(update => {
+    result += Number(checkUpdate(update))
+})
+
+console.log(result)
