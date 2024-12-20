@@ -13,24 +13,47 @@ rulesInput.forEach(item => {
 
 const pages = pagesInput.map(item => item.split(','))
 
-function checkUpdate(update) {
-    let middleNumber = 0, isValid = true
+const wrongUpdates = [], pbNumber = [], fixedUpdates = []
 
-    update.forEach((pageNumber, index, update) => {
-        if (index === update.length - 1 && isValid) middleNumber = update[(update.length-1)/2]
-        
+function checkUpdate(update) {
+    let isValid = true, fixedArray
+
+    update.forEach((pageNumber, index, update) => {        
         for(let i = index; i<update.length-1; i++) {
             let rule = rules[update[i]]
-            if (rule && rule.indexOf(pageNumber) !== -1) isValid = false
+            if (rule && rule.indexOf(pageNumber) !== -1) {
+              pbNumber.push(pageNumber)
+              isValid = false
+
+              // try to fix the array
+              if (!fixedArray) {
+                fixedArray = [...update]
+                fixedArray.splice(i, 1)
+                fixedArray.splice(index, 0, update[i])
+                // fixedUpdates.push(fixedArray)
+              }
+            }
         }
     })
-    return middleNumber
+
+    if (!isValid) {
+      wrongUpdates.push(update)
+      fixedUpdates.push(fixedArray)
+      // pbNumber.push()
+    
+    }
+    return 0
 }
 
 let result = 0
 
-pages.forEach(update => {
-    result += Number(checkUpdate(update))
+pages.forEach((update) => {
+    result += Number(checkUpdate(update), )
 })
 
-console.log(result)
+let resultFixedArray = fixedUpdates.reduce((prev, curr, arr) => prev + Number(curr[(curr.length-1)/2]), 0)
+// function correctUpdate(update) {
+
+// }
+
+console.log(result, wrongUpdates[0], pbNumber[0], wrongUpdates.length, fixedUpdates.length, resultFixedArray)
