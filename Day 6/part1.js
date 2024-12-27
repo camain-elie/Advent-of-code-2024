@@ -2,35 +2,54 @@ const fs = require('fs')
 
 const input = fs.readFileSync('./input', 'utf-8')
 
-const rulesInput = input.match(/[0-9]+\|[0-9]+/g)
-const pagesInput = input.match(/([0-9])+,([0-9][0-9],)*([0-9])+/g)
+const lineArray = input.split('\r\n')
+const map = lineArray.map(item => item.split(''))
+const direction = [
+    {x: 0, y: -1},
+    {x: 1, y: 0},
+    {x: 0, y: 1},
+    {x: -1, y: 0},
+]
+let directionIndex = 0
+let position = {x: -1, y: -1}
 
-const rules = {}
-rulesInput.forEach(item => {
-    const [pre, post] = item.split('|')
-    rules[pre] = [...(rules[pre] ?? []), post]
+map.forEach((item, index) => {
+    const x = item.indexOf('^')
+    if (x !== -1) {
+        position.x = x
+        position.y = index
+    }
 })
 
-const pages = pagesInput.map(item => item.split(','))
-
-function checkUpdate(update) {
-    let middleNumber = 0, isValid = true
-
-    update.forEach((pageNumber, index, update) => {
-        if (index === update.length - 1 && isValid) middleNumber = update[(update.length-1)/2]
-        
-        for(let i = index; i<update.length-1; i++) {
-            let rule = rules[update[i]]
-            if (rule && rule.indexOf(pageNumber) !== -1) isValid = false
-        }
-    })
-    return middleNumber
+while (position.x >=0 && position.x < map[0].length && position.y >= 0 && position.y < map.length) {
+    if (checkNextPosObstacle()) {
+        changeDirection()
+    } else {
+        move()
+    }
 }
 
-let result = 0
+function changeDirection () {
+    directionIndex++
+    if (directionIndex > direction.length - 1) directionIndex = 0    
+}
 
-pages.forEach(update => {
-    result += Number(checkUpdate(update))
+function checkNextPosObstacle () {
+    const {x: dirX, y: dirY} = direction[directionIndex]
+    let pos = {x: position.x + dirX, y: position.y + dirY}
+    return map[pos.y][pos.x] === "#"
+}
+
+function move () {
+    let {x: dirX, y: dirY} = direction[directionIndex],
+        {x, y} = position
+    let newPos = { x: x + dirX, y: y + dirY }
+    map[y][x] = 'X'
+    position = newPos
+}
+
+const toString = map.map(item => item.join('')).join('\n')
+
+fs.writeFile('./output.txt', toString, err => {
+  if (err) console.error(err)
 })
-
-console.log(result)
